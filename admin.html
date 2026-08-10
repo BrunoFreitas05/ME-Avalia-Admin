@@ -144,6 +144,23 @@
   .csv-drop p { font-size: 13px; color: #7aa0c4; margin-bottom: 4px; }
   .csv-drop code { font-size: 11px; background: #fff; padding: 1px 5px; border-radius: 4px; border: 0.5px solid #D0DCF0; }
 
+  /* ─── Editor de mensagem (rich text, igual ao popup) ─── */
+  .editor-toolbar { background: #F4F7FC; border: 1px solid #D0DCF0; border-bottom: none; border-radius: 8px 8px 0 0; overflow: hidden; }
+  .toolbar-row { display: flex; align-items: center; gap: 6px; padding: 7px 10px; }
+  .tb-btn { background: transparent; border: 1px solid transparent; border-radius: 6px; color: #4A6FA5; font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px 8px; }
+  .tb-btn:hover { background: #E8F0FE; color: #00529e; }
+  .tb-btn.active { background: #00529e; color: #fff; }
+  .tb-sep { width: 1px; height: 18px; background: #D0DCF0; margin: 0 2px; }
+  .color-swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; }
+  .color-swatch:hover, .color-swatch.active { border-color: #00529e; transform: scale(1.15); }
+  .emoji-picker { display: none; grid-template-columns: repeat(9,1fr); background: #F4F7FC; border-top: 1px solid #D0DCF0; padding: 6px 8px 4px; gap: 2px; }
+  .emoji-picker.open { display: grid; }
+  .emoji-btn { font-size: 17px; background: transparent; border: none; cursor: pointer; padding: 3px 0; border-radius: 5px; text-align: center; }
+  .emoji-btn:hover { background: #E8F0FE; }
+  .rich-editor-body { width: 100%; min-height: 110px; max-height: 260px; overflow-y: auto; padding: 10px 12px; font-size: 13px; line-height: 1.6; color: #111; background: #fff; border: 1px solid #D0DCF0; border-top: none; border-radius: 0 0 8px 8px; outline: none; }
+  .rich-editor-body:focus { border-color: #00529e; }
+  .rich-editor-body:empty:before { content: attr(data-placeholder); color: #aaa; }
+
   /* ─── Colaboradores (visão por empresa) ─── */
   .colab-select { padding: 6px 10px; border: 1px solid #D0DCF0; border-radius: 8px; font-size: 12px; font-family: inherit; color: #1a2f4e; background: #fff; }
   .colab-add-select { padding: 9px 12px; border: 1px solid #D0DCF0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #1a2f4e; background: #fff; }
@@ -231,6 +248,9 @@
       <div class="section-header" style="margin-top:32px;">
         <div class="section-title">Colaboradores da empresa</div>
       </div>
+      <div class="add-row" style="margin-bottom:12px;">
+        <input type="text" id="colabBusca" placeholder="🔍 Buscar colaborador por e-mail..." oninput="renderColaboradores()" />
+      </div>
       <div class="item-card" style="cursor:default;">
         <div style="font-size:13px; color:#4A6FA5; font-weight:500; margin-bottom:10px;">Adicionar colaborador diretamente a um departamento</div>
         <div class="add-row">
@@ -276,7 +296,23 @@
       </div>
       <div class="form-group">
         <label>Mensagem padrão da empresa</label>
-        <textarea id="empresaMensagem" placeholder="Mensagem usada quando o agente não está em nenhum departamento específico..."></textarea>
+        <div class="rich-editor" id="empresaMensagemEditor">
+          <div class="editor-toolbar">
+            <div class="toolbar-row">
+              <button type="button" class="tb-btn" data-cmd="bold"><b>B</b></button>
+              <div class="tb-sep"></div>
+              <div class="color-swatch active" data-color="" style="background:#111;"></div>
+              <div class="color-swatch" data-color="#16a34a" style="background:#16a34a;"></div>
+              <div class="color-swatch" data-color="#d97706" style="background:#d97706;"></div>
+              <div class="color-swatch" data-color="#dc2626" style="background:#dc2626;"></div>
+              <div class="color-swatch" data-color="#2563eb" style="background:#2563eb;"></div>
+              <div class="tb-sep"></div>
+              <button type="button" class="tb-btn emoji-toggle">😊</button>
+            </div>
+            <div class="emoji-picker"></div>
+          </div>
+          <div id="empresaMensagem" class="rich-editor-body" contenteditable="true" data-placeholder="Mensagem usada quando o agente não está em nenhum departamento específico..."></div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -308,7 +344,23 @@
       </div>
       <div class="form-group">
         <label>Mensagem pública específica</label>
-        <textarea id="deptoMensagem" placeholder="Deixe em branco para usar a mensagem padrão da empresa..."></textarea>
+        <div class="rich-editor" id="deptoMensagemEditor">
+          <div class="editor-toolbar">
+            <div class="toolbar-row">
+              <button type="button" class="tb-btn" data-cmd="bold"><b>B</b></button>
+              <div class="tb-sep"></div>
+              <div class="color-swatch active" data-color="" style="background:#111;"></div>
+              <div class="color-swatch" data-color="#16a34a" style="background:#16a34a;"></div>
+              <div class="color-swatch" data-color="#d97706" style="background:#d97706;"></div>
+              <div class="color-swatch" data-color="#dc2626" style="background:#dc2626;"></div>
+              <div class="color-swatch" data-color="#2563eb" style="background:#2563eb;"></div>
+              <div class="tb-sep"></div>
+              <button type="button" class="tb-btn emoji-toggle">😊</button>
+            </div>
+            <div class="emoji-picker"></div>
+          </div>
+          <div id="deptoMensagem" class="rich-editor-body" contenteditable="true" data-placeholder="Deixe em branco para usar a mensagem padrão da empresa..."></div>
+        </div>
       </div>
       <div>
         <div style="font-size:13px; color:#4A6FA5; font-weight:500; margin-bottom:8px;">Agentes vinculados</div>
@@ -349,6 +401,77 @@ let config        = { versao: 1, empresas: {} };
 let empresaAtual  = null;
 let dominiosModal = [];
 let agentesModal  = [];
+let richEmpresaMensagem, richDeptoMensagem;
+
+// ─── Editor de mensagem (rich text, igual ao popup da extensão) ────────────
+const EDITOR_EMOJIS = ['👍','❤️','🙏','😊','⭐','🎉','✅','🔔','💬','📝','🚀','💪','😁','🤝','💡','📦','🏆','😍'];
+
+function initRichEditor(wrapperId) {
+  const wrapper  = document.getElementById(wrapperId);
+  const editor   = wrapper.querySelector('.rich-editor-body');
+  const boldBtn  = wrapper.querySelector('[data-cmd="bold"]');
+  const emojiBtn = wrapper.querySelector('.emoji-toggle');
+  const picker   = wrapper.querySelector('.emoji-picker');
+  picker.innerHTML = EDITOR_EMOJIS.map(e => `<button type="button" class="emoji-btn">${e}</button>`).join('');
+
+  let activeColor = '';
+
+  boldBtn.addEventListener('mousedown', e => {
+    e.preventDefault();
+    document.execCommand('bold');
+    boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+    editor.focus();
+  });
+  editor.addEventListener('keyup',   () => boldBtn.classList.toggle('active', document.queryCommandState('bold')));
+  editor.addEventListener('mouseup', () => boldBtn.classList.toggle('active', document.queryCommandState('bold')));
+
+  wrapper.querySelectorAll('.color-swatch').forEach(sw => {
+    sw.addEventListener('mousedown', e => {
+      e.preventDefault();
+      activeColor = sw.dataset.color || '';
+      wrapper.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) {
+        document.execCommand('styleWithCSS', false, true);
+        document.execCommand('foreColor', false, activeColor || '#111111');
+      }
+      editor.focus();
+    });
+  });
+  editor.addEventListener('keypress', () => {
+    if (activeColor) {
+      document.execCommand('styleWithCSS', false, true);
+      document.execCommand('foreColor', false, activeColor);
+    }
+  });
+
+  emojiBtn.addEventListener('mousedown', e => {
+    e.preventDefault();
+    picker.classList.toggle('open');
+  });
+  picker.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('mousedown', e => {
+      e.preventDefault();
+      editor.focus();
+      document.execCommand('insertText', false, btn.textContent);
+      picker.classList.remove('open');
+    });
+  });
+  document.addEventListener('click', e => {
+    if (!emojiBtn.contains(e.target) && !picker.contains(e.target)) picker.classList.remove('open');
+  });
+
+  // Cola sempre como texto puro, herdando a formatação atual do editor —
+  // evita que HTML colado do Word/Slack/Docs traga estilos estranhos.
+  editor.addEventListener('paste', e => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
+  });
+
+  return editor;
+}
 
 // ─── Token salvo localmente (evita pedir de novo a cada login) ─────────────
 const TOKEN_STORAGE_KEY = 'meAvalia_admin_ghToken';
@@ -594,13 +717,20 @@ function popularSelectAdicionar(selectEl) {
 function renderColaboradores() {
   const empresa = config.empresas[empresaAtual] || {};
   const mapa    = coletarColaboradores();
-  const emails  = Object.keys(mapa).sort();
+  const totalGeral = Object.keys(mapa).length;
+  const termo   = (document.getElementById('colabBusca')?.value || '').trim().toLowerCase();
+  let emails    = Object.keys(mapa).sort();
+  if (termo) emails = emails.filter(e => e.toLowerCase().includes(termo));
 
   popularSelectAdicionar(document.getElementById('colabDeptoSelect'));
 
   const lista = document.getElementById('listaColaboradores');
-  if (emails.length === 0) {
+  if (totalGeral === 0) {
     lista.innerHTML = `<div class="empty"><div class="empty-icon">👥</div><p>Nenhum colaborador cadastrado ainda.</p></div>`;
+    return;
+  }
+  if (emails.length === 0) {
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><p>Nenhum colaborador encontrado para "${termo}".</p></div>`;
     return;
   }
 
@@ -685,7 +815,7 @@ function abrirModalEmpresa(id) {
   document.getElementById('modalEmpresaTitle').textContent = id ? 'Editar empresa' : 'Nova empresa';
   document.getElementById('empresaNome').value       = e.nome || '';
   document.getElementById('empresaEdicao').checked   = !!e.edicao_padrao;
-  document.getElementById('empresaMensagem').value   = (e.mensagem_padrao||'').replace(/<[^>]+>/g,'');
+  richEmpresaMensagem.innerHTML = e.mensagem_padrao || '';
   dominiosModal = [...(e.dominios||[])];
   renderDominioTags();
   document.getElementById('modalEmpresa').classList.add('open');
@@ -722,13 +852,13 @@ async function salvarEmpresa() {
     alert(`Já existe uma empresa com identificador igual ("${id}"). Escolha um nome diferente.`);
     return;
   }
-  const msg = document.getElementById('empresaMensagem').value.trim();
+  const msg = richEmpresaMensagem.textContent.trim() ? richEmpresaMensagem.innerHTML.trim() : '';
   const existing = config.empresas[id] || {};
   config.empresas[id] = {
     nome,
     dominios: [...dominiosModal],
     edicao_padrao: document.getElementById('empresaEdicao').checked,
-    mensagem_padrao: msg ? `<p>${msg.replace(/\n/g,'</p><p>')}</p>` : '',
+    mensagem_padrao: msg,
     departamentos: existing.departamentos || {},
   };
   document.getElementById('btnSalvarEmpresa').disabled = true;
@@ -756,7 +886,7 @@ function abrirModalDepto(id) {
   document.getElementById('modalDeptoTitle').textContent = id ? 'Editar departamento' : 'Novo departamento';
   document.getElementById('deptoNome').value         = d.nome || '';
   document.getElementById('deptoEdicao').checked     = !!d.edicao_habilitada;
-  document.getElementById('deptoMensagem').value     = (d.mensagem||'').replace(/<[^>]+>/g,'');
+  richDeptoMensagem.innerHTML = d.mensagem || '';
   agentesModal = [...(d.usuarios||[])];
   renderAgentsTags();
   document.getElementById('modalDepto').classList.add('open');
@@ -816,7 +946,7 @@ async function salvarDepto() {
     alert(`Já existe um departamento com identificador igual ("${id}"). Escolha um nome diferente.`);
     return;
   }
-  const msg = document.getElementById('deptoMensagem').value.trim();
+  const msg = richDeptoMensagem.textContent.trim() ? richDeptoMensagem.innerHTML.trim() : '';
 
   // Um agente só pode estar em um departamento por vez dentro da mesma empresa —
   // remove dos outros departamentos os e-mails que estão sendo salvos aqui.
@@ -828,7 +958,7 @@ async function salvarDepto() {
   config.empresas[empresaAtual].departamentos[id] = {
     nome,
     edicao_habilitada: document.getElementById('deptoEdicao').checked,
-    mensagem: msg ? `<p>${msg.replace(/\n/g,'</p><p>')}</p>` : '',
+    mensagem: msg,
     usuarios: [...agentesModal],
   };
   document.getElementById('btnSalvarDepto').disabled = true;
@@ -877,6 +1007,9 @@ function toast(msg) {
     }
   });
 });
+
+richEmpresaMensagem = initRichEditor('empresaMensagemEditor');
+richDeptoMensagem   = initRichEditor('deptoMensagemEditor');
 </script>
 </body>
 </html>
