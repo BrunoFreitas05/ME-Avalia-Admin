@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ME Avalia — Política de Privacidade</title>
+<link rel="icon" href="icon128.png">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #F4F7FC; color: #1a2f4e; margin: 0; padding: 40px 20px; line-height: 1.6; }
+  .container { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 16px; border: 0.5px solid #D0DCF0; padding: 40px; }
+  h1 { color: #00529e; font-size: 24px; margin-bottom: 4px; }
+  .updated { color: #7aa0c4; font-size: 13px; margin-bottom: 28px; }
+  h2 { color: #1a2f4e; font-size: 17px; margin-top: 28px; margin-bottom: 10px; }
+  p, li { font-size: 14px; color: #333; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  code { background: #F4F7FC; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Política de Privacidade — ME Avalia</h1>
+  <div class="updated">Última atualização: 10 de agosto de 2026</div>
+
+  <p>ME Avalia é uma extensão de uso interno da Melhor Envio, usada por agentes de atendimento para enviar pesquisas de satisfação e mensagens públicas aos clientes através do Octadesk. Esta página descreve quais dados a extensão coleta, como são usados e com quem são compartilhados.</p>
+
+  <h2>Dados que coletamos</h2>
+  <ul>
+    <li><strong>Nome e e-mail do agente</strong> — obtidos via login com sua conta Google (usando os escopos padrão <code>userinfo.email</code> e <code>userinfo.profile</code>), para identificar quem está usando a extensão.</li>
+    <li><strong>Token de sessão do Octadesk</strong> — capturado automaticamente da navegação do próprio agente no <code>app.octadesk.com</code>, usado exclusivamente para que a extensão possa chamar a API do Octadesk em nome do agente (enviar pesquisas e mensagens). Nunca é enviado para fora do Octadesk.</li>
+    <li><strong>Dados dos tickets processados</strong> — números de ticket e status, lidos da própria tela do Octadesk que o agente já tem aberta.</li>
+    <li><strong>Mensagem pública configurada</strong> — o texto que o agente (ou o administrador) configura para ser enviado aos clientes.</li>
+  </ul>
+
+  <h2>Como os dados são usados e compartilhados</h2>
+  <ul>
+    <li>Nome, e-mail e resultados de cada execução (quantidade de pesquisas enviadas, erros, tempo) são enviados a uma planilha do Google Sheets interna da empresa, para fins de acompanhamento operacional da equipe.</li>
+    <li>O e-mail do agente é comparado com uma lista de domínios e departamentos cadastrados pelo administrador, armazenada em um repositório privado do GitHub, para determinar qual mensagem padrão exibir. Se o domínio do e-mail for reconhecido, o e-mail pode ser registrado nessa mesma lista automaticamente.</li>
+    <li>Nenhum dado é vendido, usado para publicidade, ou compartilhado com terceiros fora do ecossistema descrito acima (Google, GitHub, Cloudflare e Octadesk — todos usados apenas como infraestrutura interna da ferramenta).</li>
+  </ul>
+
+  <h2>Armazenamento local</h2>
+  <p>A extensão guarda localmente no navegador do agente (via <code>chrome.storage.local</code>): o token de sessão do Octadesk, informações do agente logado, a mensagem em edição e a lista de tickets selecionados. Esses dados ficam apenas no dispositivo do agente e podem ser apagados a qualquer momento removendo a extensão ou usando o botão "Sair" no popup.</p>
+
+  <h2>Retenção e exclusão</h2>
+  <p>Os dados na planilha de relatórios são mantidos pelo administrador da ferramenta enquanto forem úteis para acompanhamento operacional. Para solicitar remoção de dados específicos, entre em contato com o administrador da extensão.</p>
+
+  <h2>Contato</h2>
+  <p>Dúvidas sobre esta política ou sobre os dados coletados podem ser enviadas ao administrador da extensão ME Avalia, dentro da Melhor Envio.</p>
+</div>
+</body>
+</html>
