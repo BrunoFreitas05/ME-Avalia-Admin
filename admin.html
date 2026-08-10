@@ -458,7 +458,9 @@ function initRichEditor(wrapperId) {
       picker.classList.remove('open');
     });
   });
-  document.addEventListener('click', e => {
+  // Fecha ao clicar fora — usa mousedown (mesmo evento do botão/emoji acima) pra não
+  // correr o risco do "clique fora" disparar antes da inserção do emoji terminar.
+  document.addEventListener('mousedown', e => {
     if (!emojiBtn.contains(e.target) && !picker.contains(e.target)) picker.classList.remove('open');
   });
 
