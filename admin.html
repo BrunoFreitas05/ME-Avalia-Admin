@@ -258,6 +258,18 @@
     <!-- ── View: Administradores (só super-admin) ── -->
     <div id="viewAdmins" style="display:none;">
       <button class="btn-back" onclick="voltarEmpresas()">← Voltar para empresas</button>
+
+      <div class="section-header">
+        <div class="section-title">Versão mínima da extensão</div>
+      </div>
+      <div class="item-card" style="cursor:default; margin-bottom:28px;">
+        <div style="font-size:13px; color:#4A6FA5; margin-bottom:10px;">Agentes com uma versão instalada mais antiga que essa ficam bloqueados no popup até atualizar. Deixe em branco para não exigir nenhuma versão específica.</div>
+        <div class="add-row">
+          <input type="text" id="versaoMinimaInput" placeholder="Ex: 1.1.3" />
+          <button class="btn-add-inline" onclick="salvarVersaoMinima()">Salvar</button>
+        </div>
+      </div>
+
       <div class="section-header">
         <div class="section-title">Administradores</div>
         <button class="btn-primary" onclick="abrirModalAdmin()">+ Adicionar administrador</button>
@@ -591,6 +603,7 @@ async function atualizarPainel() {
     await carregarConfig();
     document.getElementById('btnAdmins').style.display = ehSuperadmin() ? 'inline-flex' : 'none';
     if (document.getElementById('viewAdmins').style.display === 'block') {
+      document.getElementById('versaoMinimaInput').value = config.versaoMinima || '';
       renderAdmins();
     } else if (empresaAtual && config.empresas[empresaAtual]) {
       renderDeptos();
@@ -1041,7 +1054,22 @@ function abrirAdmins() {
   document.getElementById('viewEmpresas').style.display = 'none';
   document.getElementById('viewDeptos').style.display   = 'none';
   document.getElementById('viewAdmins').style.display   = 'block';
+  document.getElementById('versaoMinimaInput').value = config.versaoMinima || '';
   renderAdmins();
+}
+
+async function salvarVersaoMinima() {
+  const versao = document.getElementById('versaoMinimaInput').value.trim();
+  if (versao && !/^\d+\.\d+\.\d+$/.test(versao)) {
+    alert('Use o formato 1.2.3 (ou deixe em branco pra não exigir nenhuma versão).');
+    return;
+  }
+  showLoading(true);
+  try {
+    await chamarAcao('salvarVersaoMinima', { versao });
+    toast(versao ? `✅ Versão mínima definida: ${versao}` : '✅ Exigência de versão removida');
+  } catch(e) { alert('Erro ao salvar versão mínima.'); }
+  showLoading(false);
 }
 
 function renderAdmins() {
