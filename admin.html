@@ -18,14 +18,6 @@
   .login-sub { font-size: 14px; color: #7aa0c4; margin-bottom: 28px; }
   .login-error { font-size: 13px; color: #e03c31; background: #fff0f0; border: 1px solid #f5c1c1; border-radius: 8px; padding: 10px; margin-top: 16px; display: none; }
 
-  /* ─── Token ─── */
-  #tokenScreen { display: none; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(160deg, #E8F0FE 0%, #F4F7FC 55%, #FFFFFF 100%); }
-  .token-card { background: #fff; border-radius: 16px; border: 0.5px solid #D0DCF0; border-top: 3px solid #00529e; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 12px 32px rgba(0,82,158,0.12); }
-  .token-card h2 { font-size: 18px; font-weight: 700; color: #1a2f4e; margin-bottom: 6px; }
-  .token-card p { font-size: 13px; color: #7aa0c4; margin-bottom: 20px; line-height: 1.6; }
-  .token-card input { width: 100%; margin-bottom: 12px; padding: 10px 14px; border: 1px solid #D0DCF0; border-radius: 8px; font-size: 13px; font-family: monospace; }
-  .token-card input:focus { outline: none; border-color: #00529e; }
-
   /* ─── App ─── */
   #appScreen { display: none; min-height: 100vh; }
   .topbar { background: linear-gradient(135deg, #00529e 0%, #003d7a 100%); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
@@ -171,6 +163,13 @@
   .colab-email { font-size: 13px; font-weight: 600; color: #1a2f4e; word-break: break-all; }
   .colab-depto { font-size: 12px; color: #7aa0c4; margin-top: 2px; }
 
+  /* ─── Administradores ─── */
+  .admin-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: default; }
+  .admin-email { font-size: 13px; font-weight: 600; color: #1a2f4e; word-break: break-all; }
+  .admin-escopo { font-size: 12px; color: #7aa0c4; margin-top: 2px; }
+  .empresas-check-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; border: 1px solid #D0DCF0; border-radius: 8px; padding: 10px 12px; }
+  .empresas-check-list label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1a2f4e; cursor: pointer; }
+
   /* ─── Toast ─── */
   #toast { position: fixed; bottom: 24px; right: 24px; background: #1a2f4e; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; }
   #toast.show { opacity: 1; }
@@ -197,23 +196,13 @@
   </div>
 </div>
 
-<!-- ─── TOKEN ─── -->
-<div id="tokenScreen">
-  <div class="token-card">
-    <h2>🔑 GitHub Token</h2>
-    <p>Informe seu GitHub Personal Access Token com permissão <strong>repo</strong> no repositório <code>ME-Avalia-Oficial</code>. Isso só é pedido uma vez — o token fica salvo neste navegador e da próxima vez o login com Google já entra direto.</p>
-    <input type="password" id="tokenInput" placeholder="ghp_..." />
-    <button class="btn-primary" style="width:100%;" onclick="confirmarToken()">Confirmar e entrar</button>
-  </div>
-</div>
-
 <!-- ─── APP ─── -->
 <div id="appScreen">
   <div class="topbar">
     <div class="topbar-brand"><img class="topbar-logo" src="icon128.png" alt="ME Avalia" /> ME Avalia — Painel Admin</div>
     <div class="topbar-right">
       <span class="topbar-email" id="userEmail"></span>
-      <button class="btn-logout" onclick="trocarToken()">Trocar token</button>
+      <button class="btn-logout" id="btnAdmins" style="display:none;" onclick="abrirAdmins()">👤 Administradores</button>
       <button class="btn-logout" onclick="logout()">Sair</button>
     </div>
   </div>
@@ -229,7 +218,7 @@
       </div>
       <div class="section-header">
         <div class="section-title">Empresas</div>
-        <button class="btn-primary" onclick="abrirModalEmpresa()">+ Nova empresa</button>
+        <button class="btn-primary" id="btnNovaEmpresa" onclick="abrirModalEmpresa()">+ Nova empresa</button>
       </div>
       <div id="listaEmpresas"></div>
     </div>
@@ -263,6 +252,16 @@
         </div>
       </div>
       <div id="listaColaboradores"></div>
+    </div>
+
+    <!-- ── View: Administradores (só super-admin) ── -->
+    <div id="viewAdmins" style="display:none;">
+      <button class="btn-back" onclick="voltarEmpresas()">← Voltar para empresas</button>
+      <div class="section-header">
+        <div class="section-title">Administradores</div>
+        <button class="btn-primary" onclick="abrirModalAdmin()">+ Adicionar administrador</button>
+      </div>
+      <div id="listaAdmins"></div>
     </div>
 
   </div>
@@ -392,18 +391,47 @@
   </div>
 </div>
 
-<script>
-const ADMIN_EMAIL = 'brunomfreitas014@gmail.com';
-const REPO_OWNER  = 'BrunoFreitas05';
-const REPO_NAME   = 'ME-Avalia-Oficial';
-const CONFIG_PATH = 'config.json';
+<!-- ─── MODAL ADMINISTRADOR ─── -->
+<div class="modal-backdrop" id="modalAdmin">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalAdminTitle">Adicionar administrador</div>
+      <button class="btn-close" onclick="fecharModalAdmin()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>E-mail (conta Google)</label>
+        <input type="email" id="adminEmailInput" placeholder="nome@gmail.com" />
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Acesso total (super-admin)</div>
+          <div class="toggle-desc">Vê e edita todas as empresas e pode gerenciar outros administradores</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="adminSuperCheck" onchange="renderEmpresasCheckAdmin()" /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-group" id="adminEmpresasGroup">
+        <label>Empresas com acesso</label>
+        <div class="empresas-check-list" id="adminEmpresasCheckList"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalAdmin()">Cancelar</button>
+      <button class="btn-primary" id="btnSalvarAdmin" onclick="salvarAdmin()">Salvar</button>
+    </div>
+  </div>
+</div>
 
-let githubToken   = '';
+<script>
+const WORKER_BASE = 'https://me-avalia-registro.brunomfreitas014.workers.dev';
+
+let idToken       = '';
 let userEmail     = '';
-let config        = { versao: 1, empresas: {} };
+let config        = { versao: 1, empresas: {}, _scope: { superadmin: false, empresas: [] } };
 let empresaAtual  = null;
 let dominiosModal = [];
 let agentesModal  = [];
+let empresasAdminModal = [];
 let richEmpresaMensagem, richDeptoMensagem;
 
 // ─── Editor de mensagem (rich text, igual ao popup da extensão) ────────────
@@ -478,12 +506,6 @@ function initRichEditor(wrapperId) {
   return editor;
 }
 
-// ─── Token salvo localmente (evita pedir de novo a cada login) ─────────────
-const TOKEN_STORAGE_KEY = 'meAvalia_admin_ghToken';
-function getStoredToken()   { try { return localStorage.getItem(TOKEN_STORAGE_KEY) || ''; } catch(_) { return ''; } }
-function setStoredToken(t)  { try { localStorage.setItem(TOKEN_STORAGE_KEY, t); } catch(_) {} }
-function clearStoredToken() { try { localStorage.removeItem(TOKEN_STORAGE_KEY); } catch(_) {} }
-
 // ─── Google Login ──────────────────────────────────────────────────────────
 window.onload = () => {
   google.accounts.id.initialize({
@@ -500,101 +522,72 @@ function parseJwt(token) {
 }
 
 async function handleLogin(response) {
-  const p = parseJwt(response.credential);
-  if (p.email !== ADMIN_EMAIL) { document.getElementById('loginError').style.display = 'block'; return; }
-  userEmail = p.email;
+  idToken = response.credential;
+  userEmail = parseJwt(idToken).email;
   document.getElementById('loginScreen').style.display = 'none';
 
-  const saved = getStoredToken();
-  if (!saved) {
-    document.getElementById('tokenScreen').style.display = 'flex';
-    return;
-  }
-
-  // Já temos um token salvo neste navegador — entra direto, sem pedir de novo
-  githubToken = saved;
   showLoading(true);
   try {
     await carregarConfig();
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('userEmail').textContent = userEmail;
+    document.getElementById('btnAdmins').style.display = config._scope.superadmin ? 'inline-flex' : 'none';
     renderEmpresas();
-  } catch(e) {
-    // Token salvo não é mais válido — limpa e pede um novo
-    clearStoredToken();
-    githubToken = '';
-    document.getElementById('tokenScreen').style.display = 'flex';
+  } catch (e) {
+    idToken = '';
+    document.getElementById('loginScreen').style.display = 'flex';
+    if (e.status === 403) document.getElementById('loginError').style.display = 'block';
+    else alert('Não foi possível carregar o painel. Tente novamente.');
   }
   showLoading(false);
 }
 
-async function confirmarToken() {
-  const t = document.getElementById('tokenInput').value.trim();
-  if (!t) return;
-  githubToken = t;
-  showLoading(true);
-  try {
-    await carregarConfig();
-    setStoredToken(t);
-    document.getElementById('tokenScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'block';
-    document.getElementById('userEmail').textContent = userEmail;
-    renderEmpresas();
-  } catch(e) {
-    alert('Token inválido ou sem acesso. Verifique e tente novamente.');
-    githubToken = '';
+// ─── Worker (autenticação com o ID token do Google + leitura/escrita em config.json) ─
+async function chamarWorker(path, options) {
+  const res = await fetch(`${WORKER_BASE}${path}`, {
+    ...options,
+    headers: { ...(options && options.headers), Authorization: `Bearer ${idToken}` },
+  });
+  if (res.status === 401) {
+    sessaoExpirada();
+    throw new Error('Sessão expirada');
   }
-  showLoading(false);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const err = new Error(data.error || 'Erro ao comunicar com o servidor');
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
 }
 
-function trocarToken() {
-  clearStoredToken();
-  githubToken = '';
-  document.getElementById('tokenInput').value = '';
-  document.getElementById('appScreen').style.display  = 'none';
-  document.getElementById('tokenScreen').style.display = 'flex';
+function sessaoExpirada() {
+  idToken = ''; userEmail = ''; empresaAtual = null;
+  config = { versao: 1, empresas: {}, _scope: { superadmin: false, empresas: [] } };
+  document.getElementById('appScreen').style.display   = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  google.accounts.id.disableAutoSelect();
+  toast('Sessão expirada, faça login novamente.');
 }
 
-// ─── GitHub ─────────────────────────────────────────────────────────────────
 async function carregarConfig() {
-  const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CONFIG_PATH}`, {
-    headers: { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github+json' }
-  });
-  if (res.status === 404) {
-    // config.json ainda não existe neste repositório (ex: repo de teste recém-criado) — começa vazio
-    window._sha = null;
-    config = { versao: 1, empresas: {} };
-    return;
-  }
-  if (!res.ok) throw new Error('Erro');
-  const data = await res.json();
-  window._sha = data.sha;
-  // Decodifica preservando UTF-8 (acentos, emoji) — atob() puro corromperia esses caracteres
-  const json = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
-  // Migra config antigo para novo formato se necessário
-  if (!json.empresas) {
-    json.empresas = {};
-    json.versao   = 2;
-  }
-  config = json;
+  config = await chamarWorker('/admin/config', { method: 'GET' });
 }
 
-async function salvarConfig() {
-  config.versao = (config.versao || 2) + 1;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
-  const body = { message: 'ME Avalia Admin — config atualizado', content };
-  if (window._sha) body.sha = window._sha;
-  const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CONFIG_PATH}`, {
-    method: 'PUT',
-    headers: { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+async function chamarAcao(action, payload) {
+  config = await chamarWorker('/admin/action', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, payload }),
   });
-  if (!res.ok) throw new Error('Erro ao salvar');
-  window._sha = (await res.json()).content.sha;
 }
 
 // ─── View Empresas ────────────────────────────────────────────────────────
+function ehSuperadmin() { return !!(config._scope && config._scope.superadmin); }
+
 function renderEmpresas() {
+  document.getElementById('btnAdmins').style.display = ehSuperadmin() ? 'inline-flex' : 'none';
+
   const empresas = Object.entries(config.empresas || {});
   const totalDeptos  = empresas.reduce((a,[,e]) => a + Object.keys(e.departamentos||{}).length, 0);
   const totalAgentes = empresas.reduce((a,[,e]) => a + Object.values(e.departamentos||{}).reduce((b,d) => b + (d.usuarios||[]).length, 0) + (e.colaboradores_detectados||[]).length, 0);
@@ -603,9 +596,11 @@ function renderEmpresas() {
   document.getElementById('statDeptos').textContent   = totalDeptos;
   document.getElementById('statAgentes').textContent  = totalAgentes;
 
+  document.getElementById('btnNovaEmpresa').style.display = ehSuperadmin() ? 'inline-flex' : 'none';
+
   const lista = document.getElementById('listaEmpresas');
   if (empresas.length === 0) {
-    lista.innerHTML = `<div class="empty"><div class="empty-icon">🏢</div><p>Nenhuma empresa cadastrada.<br>Clique em "Nova empresa" para começar.</p></div>`;
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">🏢</div><p>Nenhuma empresa cadastrada.<br>${ehSuperadmin() ? 'Clique em "Nova empresa" para começar.' : 'Nenhuma empresa foi atribuída a você ainda.'}</p></div>`;
     return;
   }
 
@@ -624,7 +619,7 @@ function renderEmpresas() {
         </div>
         <div class="item-card-actions" onclick="event.stopPropagation()">
           <button class="btn-edit" onclick="editarEmpresa('${id}')">✏️ Editar</button>
-          <button class="btn-del" onclick="excluirEmpresa('${id}')">🗑</button>
+          ${ehSuperadmin() ? `<button class="btn-del" onclick="excluirEmpresa('${id}')">🗑</button>` : ''}
         </div>
       </div>
       ${dominios.length > 0 ? `<div class="domains-list">${dominios.map(d=>`<span class="domain-tag">@${d}</span>`).join('')}</div>` : ''}
@@ -645,6 +640,7 @@ function abrirEmpresa(id) {
 function voltarEmpresas() {
   empresaAtual = null;
   document.getElementById('viewDeptos').style.display   = 'none';
+  document.getElementById('viewAdmins').style.display   = 'none';
   document.getElementById('viewEmpresas').style.display = 'block';
   renderEmpresas();
 }
@@ -768,19 +764,9 @@ function renderColaboradores() {
 }
 
 async function moverColaborador(email, novoDeptoId) {
-  const empresa = config.empresas[empresaAtual];
-  if (!empresa.departamentos) empresa.departamentos = {};
-  Object.values(empresa.departamentos).forEach(d => {
-    d.usuarios = (d.usuarios || []).filter(e => e !== email);
-  });
-  empresa.colaboradores_detectados = (empresa.colaboradores_detectados || []).filter(e => e !== email);
-  if (novoDeptoId) {
-    if (!empresa.departamentos[novoDeptoId].usuarios) empresa.departamentos[novoDeptoId].usuarios = [];
-    empresa.departamentos[novoDeptoId].usuarios.push(email);
-  }
   showLoading(true);
   try {
-    await salvarConfig();
+    await chamarAcao('moverColaborador', { empresaId: empresaAtual, email, deptoId: novoDeptoId || '' });
     renderDeptos();
     toast(novoDeptoId ? '✅ Colaborador movido!' : 'Colaborador removido dos departamentos');
   } catch(e) {
@@ -803,15 +789,9 @@ async function adicionarColaboradorGlobal() {
   if (!email || !email.includes('@')) { toast('Informe um e-mail válido'); return; }
   if (!deptoId || !config.empresas[empresaAtual]?.departamentos?.[deptoId]) { toast('Selecione um departamento'); return; }
 
-  const empresa = config.empresas[empresaAtual];
   showLoading(true);
   try {
-    Object.values(empresa.departamentos).forEach(d => {
-      d.usuarios = (d.usuarios || []).filter(e => e !== email);
-    });
-    if (!empresa.departamentos[deptoId].usuarios) empresa.departamentos[deptoId].usuarios = [];
-    empresa.departamentos[deptoId].usuarios.push(email);
-    await salvarConfig();
+    await chamarAcao('adicionarColaboradorGlobal', { empresaId: empresaAtual, email, deptoId });
     renderDeptos();
     emailInput.value = '';
     toast('✅ Colaborador adicionado!');
@@ -860,24 +840,24 @@ async function salvarEmpresa() {
   const nome = document.getElementById('empresaNome').value.trim();
   if (!nome) { alert('Informe o nome da empresa.'); return; }
   const idExistente = document.getElementById('empresaId').value;
-  const id  = idExistente || nome.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-  if (!idExistente && config.empresas[id]) {
-    alert(`Já existe uma empresa com identificador igual ("${id}"). Escolha um nome diferente.`);
-    return;
-  }
   const msg = richEmpresaMensagem.textContent.trim() ? richEmpresaMensagem.innerHTML.trim() : '';
-  const existing = config.empresas[id] || {};
-  config.empresas[id] = {
-    nome,
-    dominios: [...dominiosModal],
-    edicao_padrao: document.getElementById('empresaEdicao').checked,
-    mensagem_padrao: msg,
-    departamentos: existing.departamentos || {},
-  };
+
   document.getElementById('btnSalvarEmpresa').disabled = true;
   showLoading(true);
-  try { await salvarConfig(); fecharModalEmpresa(); renderEmpresas(); toast('✅ Empresa salva!'); }
-  catch(e) { alert('Erro ao salvar.'); }
+  try {
+    await chamarAcao('salvarEmpresa', {
+      id: idExistente || undefined,
+      nome,
+      dominios: [...dominiosModal],
+      edicao_padrao: document.getElementById('empresaEdicao').checked,
+      mensagem_padrao: msg,
+    });
+    fecharModalEmpresa();
+    renderEmpresas();
+    toast('✅ Empresa salva!');
+  } catch(e) {
+    alert(e.status === 409 ? 'Já existe uma empresa com identificador igual. Escolha um nome diferente.' : 'Erro ao salvar.');
+  }
   document.getElementById('btnSalvarEmpresa').disabled = false;
   showLoading(false);
 }
@@ -885,9 +865,8 @@ async function salvarEmpresa() {
 async function excluirEmpresa(id) {
   const nome = config.empresas[id]?.nome || id;
   if (!confirm(`Excluir a empresa "${nome}" e todos os seus departamentos?`)) return;
-  delete config.empresas[id];
   showLoading(true);
-  try { await salvarConfig(); renderEmpresas(); toast('Empresa excluída'); }
+  try { await chamarAcao('excluirEmpresa', { id }); renderEmpresas(); toast('Empresa excluída'); }
   catch(e) { alert('Erro ao excluir.'); }
   showLoading(false);
 }
@@ -953,31 +932,25 @@ async function salvarDepto() {
   const nome = document.getElementById('deptoNome').value.trim();
   if (!nome) { alert('Informe o nome do departamento.'); return; }
   const idExistente = document.getElementById('deptoId').value;
-  const id  = idExistente || nome.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-  if (!config.empresas[empresaAtual].departamentos) config.empresas[empresaAtual].departamentos = {};
-  if (!idExistente && config.empresas[empresaAtual].departamentos[id]) {
-    alert(`Já existe um departamento com identificador igual ("${id}"). Escolha um nome diferente.`);
-    return;
-  }
   const msg = richDeptoMensagem.textContent.trim() ? richDeptoMensagem.innerHTML.trim() : '';
 
-  // Um agente só pode estar em um departamento por vez dentro da mesma empresa —
-  // remove dos outros departamentos os e-mails que estão sendo salvos aqui.
-  Object.entries(config.empresas[empresaAtual].departamentos).forEach(([outroId, d]) => {
-    if (outroId === id) return;
-    d.usuarios = (d.usuarios || []).filter(e => !agentesModal.includes(e));
-  });
-
-  config.empresas[empresaAtual].departamentos[id] = {
-    nome,
-    edicao_habilitada: document.getElementById('deptoEdicao').checked,
-    mensagem: msg,
-    usuarios: [...agentesModal],
-  };
   document.getElementById('btnSalvarDepto').disabled = true;
   showLoading(true);
-  try { await salvarConfig(); fecharModalDepto(); renderDeptos(); toast('✅ Departamento salvo!'); }
-  catch(e) { alert('Erro ao salvar.'); }
+  try {
+    await chamarAcao('salvarDepto', {
+      empresaId: empresaAtual,
+      id: idExistente || undefined,
+      nome,
+      edicao_habilitada: document.getElementById('deptoEdicao').checked,
+      mensagem: msg,
+      usuarios: [...agentesModal],
+    });
+    fecharModalDepto();
+    renderDeptos();
+    toast('✅ Departamento salvo!');
+  } catch(e) {
+    alert(e.status === 409 ? 'Já existe um departamento com identificador igual. Escolha um nome diferente.' : 'Erro ao salvar.');
+  }
   document.getElementById('btnSalvarDepto').disabled = false;
   showLoading(false);
 }
@@ -985,17 +958,112 @@ async function salvarDepto() {
 async function excluirDepto(id) {
   const nome = config.empresas[empresaAtual]?.departamentos[id]?.nome || id;
   if (!confirm(`Excluir o departamento "${nome}"?`)) return;
-  delete config.empresas[empresaAtual].departamentos[id];
   showLoading(true);
-  try { await salvarConfig(); renderDeptos(); toast('Departamento excluído'); }
+  try { await chamarAcao('excluirDepto', { empresaId: empresaAtual, id }); renderDeptos(); toast('Departamento excluído'); }
   catch(e) { alert('Erro ao excluir.'); }
+  showLoading(false);
+}
+
+// ─── View Administradores (só super-admin) ─────────────────────────────────
+function abrirAdmins() {
+  document.getElementById('viewEmpresas').style.display = 'none';
+  document.getElementById('viewDeptos').style.display   = 'none';
+  document.getElementById('viewAdmins').style.display   = 'block';
+  renderAdmins();
+}
+
+function renderAdmins() {
+  const admins = Object.entries(config.administradores || {});
+  const lista = document.getElementById('listaAdmins');
+  if (admins.length === 0) {
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">👤</div><p>Nenhum administrador cadastrado.</p></div>`;
+    return;
+  }
+  lista.innerHTML = admins.map(([email, a]) => {
+    const escopo = a.empresas === '*'
+      ? 'Acesso total (super-admin)'
+      : ((a.empresas || []).map(id => config.empresas[id]?.nome || id).join(', ') || 'Nenhuma empresa atribuída');
+    return `
+    <div class="item-card admin-row">
+      <div style="min-width:0;">
+        <div class="admin-email">${email}</div>
+        <div class="admin-escopo">${escopo}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+        <button class="btn-edit" onclick="editarAdmin('${email}')">✏️ Editar</button>
+        <button class="btn-del" onclick="excluirAdminUI('${email}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirModalAdmin(email) {
+  const a = email ? (config.administradores[email] || {}) : {};
+  document.getElementById('modalAdminTitle').textContent = email ? 'Editar administrador' : 'Adicionar administrador';
+  document.getElementById('adminEmailInput').value    = email || '';
+  document.getElementById('adminEmailInput').disabled = !!email;
+  document.getElementById('adminSuperCheck').checked  = a.empresas === '*';
+  empresasAdminModal = Array.isArray(a.empresas) ? [...a.empresas] : [];
+  renderEmpresasCheckAdmin();
+  document.getElementById('modalAdmin').classList.add('open');
+}
+
+function editarAdmin(email) { abrirModalAdmin(email); }
+
+function fecharModalAdmin() {
+  document.getElementById('modalAdmin').classList.remove('open');
+  document.getElementById('adminEmailInput').disabled = false;
+  empresasAdminModal = [];
+}
+
+function renderEmpresasCheckAdmin() {
+  const isSuper = document.getElementById('adminSuperCheck').checked;
+  document.getElementById('adminEmpresasGroup').style.display = isSuper ? 'none' : 'block';
+  const empresas = Object.entries(config.empresas || {});
+  document.getElementById('adminEmpresasCheckList').innerHTML = empresas.length === 0
+    ? '<div style="font-size:12px;color:#7aa0c4;">Nenhuma empresa cadastrada ainda.</div>'
+    : empresas.map(([id, e]) => `
+      <label>
+        <input type="checkbox" value="${id}" ${empresasAdminModal.includes(id) ? 'checked' : ''} onchange="toggleEmpresaAdminModal('${id}', this.checked)" />
+        ${e.nome || id}
+      </label>`).join('');
+}
+
+function toggleEmpresaAdminModal(id, checked) {
+  if (checked) { if (!empresasAdminModal.includes(id)) empresasAdminModal.push(id); }
+  else { empresasAdminModal = empresasAdminModal.filter(e => e !== id); }
+}
+
+async function salvarAdmin() {
+  const email = document.getElementById('adminEmailInput').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) { alert('Informe um e-mail válido.'); return; }
+  const superadmin = document.getElementById('adminSuperCheck').checked;
+  if (!superadmin && empresasAdminModal.length === 0) { alert('Selecione ao menos uma empresa.'); return; }
+
+  document.getElementById('btnSalvarAdmin').disabled = true;
+  showLoading(true);
+  try {
+    await chamarAcao('salvarAdmin', { email, superadmin, empresas: [...empresasAdminModal] });
+    fecharModalAdmin();
+    renderAdmins();
+    toast('✅ Administrador salvo!');
+  } catch(e) { alert('Erro ao salvar administrador.'); }
+  document.getElementById('btnSalvarAdmin').disabled = false;
+  showLoading(false);
+}
+
+async function excluirAdminUI(email) {
+  if (!confirm(`Remover o acesso administrativo de ${email}?`)) return;
+  showLoading(true);
+  try { await chamarAcao('excluirAdmin', { email }); renderAdmins(); toast('Administrador removido'); }
+  catch(e) { alert(e.message || 'Erro ao remover administrador.'); }
   showLoading(false);
 }
 
 // ─── Utils ───────────────────────────────────────────────────────────────────
 function logout() {
-  githubToken = ''; userEmail = ''; empresaAtual = null;
-  config = { versao: 1, empresas: {} };
+  idToken = ''; userEmail = ''; empresaAtual = null;
+  config = { versao: 1, empresas: {}, _scope: { superadmin: false, empresas: [] } };
   document.getElementById('appScreen').style.display   = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   google.accounts.id.disableAutoSelect();
@@ -1013,10 +1081,12 @@ function toast(msg) {
 }
 
 // Fecha modal ao clicar fora
-['modalEmpresa','modalDepto'].forEach(id => {
+['modalEmpresa','modalDepto','modalAdmin'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     if (e.target === document.getElementById(id)) {
-      id === 'modalEmpresa' ? fecharModalEmpresa() : fecharModalDepto();
+      if (id === 'modalEmpresa') fecharModalEmpresa();
+      else if (id === 'modalDepto') fecharModalDepto();
+      else fecharModalAdmin();
     }
   });
 });
