@@ -435,6 +435,15 @@ let agentesModal  = [];
 let empresasAdminModal = [];
 let richEmpresaMensagem, richDeptoMensagem;
 
+// Escapa texto vindo de dados (e-mails, nomes, mensagens) antes de inserir em
+// innerHTML — sem isso, um e-mail malicioso registrado via Worker público
+// (auto-registro por domínio) poderia injetar HTML/JS no painel do admin.
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
 // ─── Editor de mensagem (rich text, igual ao popup da extensão) ────────────
 const EDITOR_EMOJIS = ['👍','❤️','💙','🙏','😊','⭐','🎉','✅','🔔','💬','📝','🚀','💪','😁','🤝','💡','📦','🏆','😍'];
 
@@ -669,7 +678,7 @@ function renderEmpresas() {
     <div class="item-card" onclick="abrirEmpresa('${id}')">
       <div class="item-card-header">
         <div>
-          <div class="item-card-name">${e.nome || id}</div>
+          <div class="item-card-name">${escapeHtml(e.nome || id)}</div>
           <div class="item-card-meta">
             <span class="badge ${e.edicao_padrao ? 'badge-on' : 'badge-off'}">${e.edicao_padrao ? 'Edição padrão habilitada' : 'Edição padrão desabilitada'}</span>
             <span style="font-size:12px;color:#7aa0c4;">${nDeptos} departamento${nDeptos!==1?'s':''}</span>
@@ -680,8 +689,8 @@ function renderEmpresas() {
           ${ehSuperadmin() ? `<button class="btn-del" onclick="excluirEmpresa('${id}')">🗑</button>` : ''}
         </div>
       </div>
-      ${dominios.length > 0 ? `<div class="domains-list">${dominios.map(d=>`<span class="domain-tag">@${d}</span>`).join('')}</div>` : ''}
-      ${e.mensagem_padrao ? `<div class="item-card-desc">${(e.mensagem_padrao||'').replace(/<[^>]+>/g,'').substring(0,80)}...</div>` : ''}
+      ${dominios.length > 0 ? `<div class="domains-list">${dominios.map(d=>`<span class="domain-tag">@${escapeHtml(d)}</span>`).join('')}</div>` : ''}
+      ${e.mensagem_padrao ? `<div class="item-card-desc">${escapeHtml((e.mensagem_padrao||'').replace(/<[^>]+>/g,'').substring(0,80))}...</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -716,12 +725,12 @@ function renderDeptos() {
       const usuarios = d.usuarios || [];
       const visiveis = usuarios.slice(0,3);
       const extras   = usuarios.length - 3;
-      const msg      = (d.mensagem||'').replace(/<[^>]+>/g,'').substring(0,80);
+      const msg      = escapeHtml((d.mensagem||'').replace(/<[^>]+>/g,'').substring(0,80));
       return `
       <div class="item-card" style="cursor:default;">
         <div class="item-card-header">
           <div>
-            <div class="item-card-name">${d.nome || id}</div>
+            <div class="item-card-name">${escapeHtml(d.nome || id)}</div>
             <div class="item-card-meta">
               <span class="badge ${d.edicao_habilitada ? 'badge-on':'badge-off'}">${d.edicao_habilitada?'Edição habilitada':'Edição desabilitada'}</span>
               <span style="font-size:12px;color:#7aa0c4;">${usuarios.length} agente${usuarios.length!==1?'s':''}</span>
@@ -735,7 +744,7 @@ function renderDeptos() {
         ${msg ? `<div class="item-card-desc">${msg}${msg.length>=80?'...':''}</div>` : '<div class="item-card-desc" style="color:#7aa0c4;font-style:italic;">Usando mensagem padrão da empresa</div>'}
         ${usuarios.length > 0 ? `
         <div class="agents-preview">
-          ${visiveis.map(e=>`<span class="agent-tag">${e}</span>`).join('')}
+          ${visiveis.map(e=>`<span class="agent-tag">${escapeHtml(e)}</span>`).join('')}
           ${extras>0?`<span class="agent-count">+${extras} mais</span>`:''}
         </div>` : ''}
       </div>`;
@@ -765,7 +774,7 @@ function popularSelectMover(selectEl, selecionado) {
   const empresa = config.empresas[empresaAtual] || {};
   const deptos = Object.entries(empresa.departamentos || {});
   selectEl.innerHTML = '<option value="">Sem departamento</option>' +
-    deptos.map(([id,d]) => `<option value="${id}" ${id===selecionado?'selected':''}>${d.nome||id}</option>`).join('');
+    deptos.map(([id,d]) => `<option value="${id}" ${id===selecionado?'selected':''}>${escapeHtml(d.nome||id)}</option>`).join('');
 }
 
 function popularSelectAdicionar(selectEl) {
@@ -775,7 +784,7 @@ function popularSelectAdicionar(selectEl) {
     selectEl.innerHTML = '<option value="">Crie um departamento primeiro</option>';
     return;
   }
-  selectEl.innerHTML = deptos.map(([id,d]) => `<option value="${id}">${d.nome||id}</option>`).join('');
+  selectEl.innerHTML = deptos.map(([id,d]) => `<option value="${id}">${escapeHtml(d.nome||id)}</option>`).join('');
 }
 
 function renderColaboradores() {
@@ -794,7 +803,7 @@ function renderColaboradores() {
     return;
   }
   if (emails.length === 0) {
-    lista.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><p>Nenhum colaborador encontrado para "${termo}".</p></div>`;
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><p>Nenhum colaborador encontrado para "${escapeHtml(termo)}".</p></div>`;
     return;
   }
 
@@ -806,18 +815,23 @@ function renderColaboradores() {
     return `
     <div class="item-card colab-row">
       <div style="min-width:0;">
-        <div class="colab-email">${email}</div>
-        <div class="colab-depto">${nomeDepto}</div>
+        <div class="colab-email">${escapeHtml(email)}</div>
+        <div class="colab-depto">${escapeHtml(nomeDepto)}</div>
       </div>
       <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-        <select id="moveSel_${i}" class="colab-select" onchange="moverColaborador('${email}', this.value)"></select>
-        <button class="btn-del" onclick="removerColaboradorGlobal('${email}')">🗑</button>
+        <select id="moveSel_${i}" class="colab-select"></select>
+        <button class="btn-del" id="delColab_${i}">🗑</button>
       </div>
     </div>`;
   }).join('');
 
+  // Handlers via addEventListener (não inline) — o e-mail nunca precisa virar
+  // texto dentro de um atributo HTML, então não tem como "escapar" das aspas.
   emails.forEach((email, i) => {
-    popularSelectMover(document.getElementById(`moveSel_${i}`), mapa[email] || '');
+    const sel = document.getElementById(`moveSel_${i}`);
+    popularSelectMover(sel, mapa[email] || '');
+    sel.addEventListener('change', () => moverColaborador(email, sel.value));
+    document.getElementById(`delColab_${i}`).addEventListener('click', () => removerColaboradorGlobal(email));
   });
 }
 
@@ -877,7 +891,7 @@ function fecharModalEmpresa() { document.getElementById('modalEmpresa').classLis
 
 function renderDominioTags() {
   document.getElementById('dominioTags').innerHTML = dominiosModal.map((d,i) =>
-    `<span class="domain-tag-edit">@${d}<button onclick="removerDominio(${i})">×</button></span>`
+    `<span class="domain-tag-edit">@${escapeHtml(d)}<button onclick="removerDominio(${i})">×</button></span>`
   ).join('');
 }
 
@@ -948,7 +962,7 @@ function fecharModalDepto() { document.getElementById('modalDepto').classList.re
 
 function renderAgentsTags() {
   document.getElementById('agentsTags').innerHTML = agentesModal.map((e,i) =>
-    `<span class="agent-tag-edit">${e}<button onclick="removerAgente(${i})">×</button></span>`
+    `<span class="agent-tag-edit">${escapeHtml(e)}<button onclick="removerAgente(${i})">×</button></span>`
   ).join('');
 }
 
@@ -1037,22 +1051,27 @@ function renderAdmins() {
     lista.innerHTML = `<div class="empty"><div class="empty-icon">👤</div><p>Nenhum administrador cadastrado.</p></div>`;
     return;
   }
-  lista.innerHTML = admins.map(([email, a]) => {
+  lista.innerHTML = admins.map(([email, a], i) => {
     const escopo = a.empresas === '*'
       ? 'Acesso total (super-admin)'
       : ((a.empresas || []).map(id => config.empresas[id]?.nome || id).join(', ') || 'Nenhuma empresa atribuída');
     return `
     <div class="item-card admin-row">
       <div style="min-width:0;">
-        <div class="admin-email">${email}</div>
-        <div class="admin-escopo">${escopo}</div>
+        <div class="admin-email">${escapeHtml(email)}</div>
+        <div class="admin-escopo">${escapeHtml(escopo)}</div>
       </div>
       <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-        <button class="btn-edit" onclick="editarAdmin('${email}')">✏️ Editar</button>
-        <button class="btn-del" onclick="excluirAdminUI('${email}')">🗑</button>
+        <button class="btn-edit" id="editAdmin_${i}">✏️ Editar</button>
+        <button class="btn-del" id="delAdmin_${i}">🗑</button>
       </div>
     </div>`;
   }).join('');
+
+  admins.forEach(([email], i) => {
+    document.getElementById(`editAdmin_${i}`).addEventListener('click', () => editarAdmin(email));
+    document.getElementById(`delAdmin_${i}`).addEventListener('click', () => excluirAdminUI(email));
+  });
 }
 
 function abrirModalAdmin(email) {
@@ -1083,7 +1102,7 @@ function renderEmpresasCheckAdmin() {
     : empresas.map(([id, e]) => `
       <label>
         <input type="checkbox" value="${id}" ${empresasAdminModal.includes(id) ? 'checked' : ''} onchange="toggleEmpresaAdminModal('${id}', this.checked)" />
-        ${e.nome || id}
+        ${escapeHtml(e.nome || id)}
       </label>`).join('');
 }
 
