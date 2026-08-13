@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ME Avalia — Guia de Uso e Central de Ajuda</title>
+<link rel="icon" href="icon128.png">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #1a2f4e; line-height: 1.6; }
+  a { color: inherit; }
+
+  /* ── Topo ── */
+  .topbar {
+    background: linear-gradient(135deg, #00529e 0%, #003d7a 100%);
+    padding: 34px 20px 30px; display: flex; align-items: center; gap: 16px;
+  }
+  .topbar img { width: 48px; height: 48px; border-radius: 11px; background: #fff; padding: 3px; flex-shrink: 0; }
+  .topbar h1 { color: #fff; font-size: 22px; font-weight: 700; }
+  .topbar p  { color: rgba(255,255,255,0.75); font-size: 13.5px; margin-top: 2px; }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  /* ── Navegação por chips — barra fixa (sticky) abaixo do topo ── */
+  .toc-band {
+    position: sticky; top: 0; z-index: 20;
+    background: #fff; border-bottom: 1px solid #D0DCF0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .toc {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 12px 20px;
+  }
+  .toc a {
+    font-size: 12.5px; font-weight: 700; text-decoration: none;
+    padding: 7px 14px; border-radius: 20px;
+    background: #F4F7FC; border: 1px solid #D0DCF0; color: #00529e;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+  }
+  .toc a:hover { background: #00529e; color: #fff; border-color: #00529e; transform: translateY(-1px); }
+
+  /* ── Faixas de seção alternadas ── */
+  .band { padding: 40px 20px; }
+  .band.plain  { background: #fff; }
+  .band.tinted { background: #F4F7FC; }
+  .band.dark   { background: linear-gradient(135deg, #00529e 0%, #003d7a 100%); }
+
+  section .inner { max-width: 760px; margin: 0 auto; }
+  section h2 {
+    font-size: 19px; font-weight: 700; color: #1a2f4e;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+    scroll-margin-top: 16px;
+  }
+  section .kicker {
+    font-size: 11px; font-weight: 700; color: #7aa0c4;
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;
+  }
+  section .intro { font-size: 13.5px; color: #4A6FA5; margin: 10px 0 22px; max-width: 60ch; }
+
+  /* ── Linha do tempo (passos) ── */
+  .timeline { position: relative; padding-left: 6px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 17px; top: 6px; bottom: 6px;
+    width: 2px; background: linear-gradient(#00529e, #B5D4F4);
+  }
+  .step {
+    position: relative; padding: 2px 0 26px 46px;
+  }
+  .step:last-child { padding-bottom: 2px; }
+  .step .num {
+    position: absolute; left: 0; top: 0;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #00529e; color: #fff; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 8px rgba(0,82,158,0.25);
+  }
+  .step b { display: block; font-size: 14px; color: #1a2f4e; margin-bottom: 2px; }
+  .step span { font-size: 12.5px; color: #7aa0c4; }
+
+  /* ── Cards de modo de envio ── */
+  .mode-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 640px) { .mode-cards { grid-template-columns: 1fr; } }
+  .mode-card {
+    border-radius: 14px; padding: 18px; color: #fff;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  }
+  .mode-card.ambos    { background: linear-gradient(160deg, #2E7BC7 0%, #00529e 100%); }
+  .mode-card.pesquisa { background: linear-gradient(160deg, #F0A93D 0%, #C47f00 100%); }
+  .mode-card.mensagem { background: linear-gradient(160deg, #3FC96B 0%, #1A7F3C 100%); }
+  .mode-card .icon { font-size: 26px; margin-bottom: 8px; display: block; }
+  .mode-card .tag { font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px; }
+  .mode-card p { font-size: 12.5px; opacity: 0.92; }
+
+  /* ── Legenda do relatório ── */
+  .report-legend { display: flex; flex-direction: column; gap: 10px; }
+  .report-legend .item {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: #fff; border-radius: 10px; padding: 12px 16px;
+    border-left: 4px solid transparent;
+  }
+  .report-legend .item.ok   { border-color: #16a34a; }
+  .report-legend .item.warn { border-color: #d97706; }
+  .report-legend .item.err  { border-color: #e03c31; }
+  .report-legend .icon { font-size: 18px; line-height: 1.3; }
+  .report-legend b { display: block; font-size: 13.5px; }
+  .report-legend span { font-size: 12.5px; color: #7aa0c4; }
+
+  /* ── FAQ ── */
+  .faq-group { margin-bottom: 22px; }
+  .faq-group .kicker { display: flex; align-items: center; gap: 6px; }
+  details {
+    background: #fff; border: 0.5px solid #D0DCF0; border-radius: 10px;
+    padding: 13px 16px; margin-bottom: 8px;
+  }
+  details summary {
+    cursor: pointer; font-size: 13.5px; font-weight: 600; color: #1a2f4e;
+    list-style: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: '▸'; color: #00529e; font-weight: 700; margin-right: 8px; display: inline-block;
+    transition: transform 0.15s;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details .answer { font-size: 13px; color: #4A6FA5; margin-top: 10px; padding-left: 20px; }
+  details .answer code {
+    background: #F4F7FC; border: 0.5px solid #D0DCF0; border-radius: 4px;
+    padding: 1px 6px; font-size: 12px; color: #00529e;
+  }
+
+  /* ── Contato ── */
+  .contact-box h2 { color: #fff; border: none; }
+  .contact-box .intro { color: rgba(255,255,255,0.8); }
+  .contact-card {
+    display: inline-flex; align-items: center; gap: 14px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 14px; padding: 16px 22px;
+  }
+  .contact-card .avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #F5C518; color: #1a2f4e; font-weight: 700; font-size: 17px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .contact-card .name { color: #fff; font-weight: 700; font-size: 14px; }
+  .contact-card .role { color: rgba(255,255,255,0.7); font-size: 12px; }
+
+  .slack-btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    margin-top: 14px; padding: 10px 20px;
+    background: #fff; color: #1a2f4e; font-weight: 700; font-size: 13px;
+    border-radius: 10px; text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .slack-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.22); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <img src="icon128.png" alt="ME Avalia" />
+  <div>
+    <h1>ME Avalia</h1>
+    <p>Guia de uso e central de ajuda</p>
+  </div>
+</div>
+
+<nav class="toc-band">
+  <div class="toc wrap">
+    <a href="#comecando">🚀 Começando</a>
+    <a href="#modos">📋 Modos de envio</a>
+    <a href="#relatorio">📊 Relatório</a>
+    <a href="#faq">❓ Perguntas frequentes</a>
+    <a href="#contato">💬 Fale conosco</a>
+  </div>
+</nav>
+
+<section id="comecando" class="band plain">
+  <div class="inner">
+    <div class="kicker">Passo a passo</div>
+    <h2>🚀 Como usar</h2>
+    <p class="intro">Do login até o relatório final — o fluxo completo em 6 passos.</p>
+    <div class="timeline">
+      <div class="step">
+        <div class="num">1</div>
+        <b>Conecte sua conta Google</b>
+        <span>É assim que a extensão sabe quem você é e reconhece sua empresa/departamento automaticamente.</span>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <b>Abra o Octadesk</b>
+        <span>Navegue pela lista de tickets em app.octadesk.com — a extensão captura seu token de acesso enquanto você usa o sistema normalmente.</span>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <b>Selecione os tickets</b>
+        <span>Marque na tabela do Octadesk os tickets que quer processar. Só tickets <b>Resolvidos</b> são considerados.</span>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <b>Clique em "🔄 Atualizar"</b>
+        <span>No popup da extensão, puxa os tickets selecionados pra lista de envio.</span>
+      </div>
+      <div class="step">
+        <div class="num">5</div>
+        <b>Confira a mensagem pública</b>
+        <span>Se a edição estiver liberada pro seu departamento, personalize o texto antes de enviar.</span>
+      </div>
+      <div class="step">
+        <div class="num">6</div>
+        <b>Clique em "▶ Enviar"</b>
+        <span>Acompanhe o progresso em tempo real. Ao final, o relatório da sessão mostra o resultado de cada ticket.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="modos" class="band tinted">
+  <div class="inner">
+    <div class="kicker">Configurado pelo admin</div>
+    <h2>📋 Modos de envio</h2>
+    <p class="intro">O que a extensão dispara pra cada ticket é definido pelo administrador (por empresa ou departamento). Você não escolhe isso — só acompanha pelo indicador que aparece acima da caixa de mensagem no popup.</p>
+    <div class="mode-cards">
+      <div class="mode-card ambos">
+        <span class="icon">📋💬</span>
+        <span class="tag">Pesquisa + Mensagem</span>
+        <p>Envia a pesquisa de satisfação e, se ela for aceita, envia também a mensagem pública pedindo a avaliação.</p>
+      </div>
+      <div class="mode-card pesquisa">
+        <span class="icon">📋</span>
+        <span class="tag">Somente pesquisa</span>
+        <p>Envia só a pesquisa de satisfação. A caixa de mensagem some do popup, já que ela não é usada nesse modo.</p>
+      </div>
+      <div class="mode-card mensagem">
+        <span class="icon">💬</span>
+        <span class="tag">Somente mensagem</span>
+        <p>Pula a pesquisa inteiramente e manda direto a mensagem pública configurada, pro ticket selecionado.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="relatorio" class="band plain">
+  <div class="inner">
+    <div class="kicker">Depois de enviar</div>
+    <h2>📊 Entendendo o relatório</h2>
+    <p class="intro">Cada sessão de envio termina com um resumo — veja o que cada número significa.</p>
+    <div class="report-legend">
+      <div class="item ok">
+        <span class="icon">✅</span>
+        <div><b>Enviadas</b><span>Tickets onde a ação configurada (pesquisa e/ou mensagem) foi concluída com sucesso.</span></div>
+      </div>
+      <div class="item warn">
+        <span class="icon">⏳</span>
+        <div><b>Limite 3x</b><span>O Octadesk recusa reenviar pesquisa pro mesmo cliente pela 4ª vez ou mais — esses tickets são pulados de propósito, não é um erro.</span></div>
+      </div>
+      <div class="item err">
+        <span class="icon">⚠️</span>
+        <div><b>Erros</b><span>Algo impediu o envio. Passe o mouse sobre o número do ticket na lista de erros pra ver o motivo exato.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="band tinted">
+  <div class="inner">
+    <div class="kicker">Tire suas dúvidas</div>
+    <h2>❓ Perguntas frequentes</h2>
+
+    <div class="faq-group">
+      <div class="kicker">💬 Mensagem e edição</div>
+      <details>
+        <summary>Minha mensagem personalizada volta pro texto padrão sozinha</summary>
+        <div class="answer">Se a edição estiver <b>habilitada</b> pro seu departamento, o que você escreve fica salvo e não é mais sobrescrito automaticamente. Se isso ainda acontecer, seu departamento provavelmente está com a edição <b>desabilitada</b> pelo admin — nesse caso a mensagem é sempre a que está configurada no painel, de propósito (garante padronização do time).</div>
+      </details>
+      <details>
+        <summary>Não consigo editar a mensagem — a caixa aparece travada</summary>
+        <div class="answer">Isso é controlado pelo administrador, por empresa ou departamento. Se aparecer "🔒 Mensagem padrão — edição desabilitada", seu time usa uma mensagem fixa. Fale com seu administrador se achar que deveria poder editar.</div>
+      </details>
+    </div>
+
+    <div class="faq-group">
+      <div class="kicker">🔌 Conexão e sessão</div>
+      <details>
+        <summary>Meus tickets selecionados não aparecem, ou o contador fica em zero</summary>
+        <div class="answer">Isso geralmente é a extensão perdendo contato com a página do Octadesk. <b>Recarregue a aba do Octadesk (F5) e tente de novo</b>: abra a lista de tickets, selecione-os de novo e clique em "🔄 Atualizar" no popup. Se mesmo assim continuar em zero, confira se os tickets estão marcados como <b>Resolvido</b> — só esses entram na lista — e se algum aviso apareceu explicando um número ignorado.</div>
+      </details>
+      <details>
+        <summary>Erro "Sessão do Octadesk expirada" ou muitos erros de uma vez</summary>
+        <div class="answer">Recarregue a aba do Octadesk (app.octadesk.com) e navegue por ela por alguns segundos antes de tentar de novo — a extensão captura o token de acesso enquanto você usa o Octadesk normalmente. O token dura cerca de 4 horas.</div>
+      </details>
+    </div>
+
+    <div class="faq-group">
+      <div class="kicker">⚠️ Erros no envio</div>
+      <details>
+        <summary>Um ticket aparece como "sem UUID, pulado" ou com erro "Ticket não localizado"</summary>
+        <div class="answer">A extensão não conseguiu localizar aquele ticket no Octadesk pelo número selecionado. Confirme se o número está certo e se o ticket ainda existe. Se persistir em vários tickets ao mesmo tempo, recarregue a aba do Octadesk (veja a pergunta acima sobre sessão expirada).</div>
+      </details>
+      <details>
+        <summary>Erro "Octadesk não disponibilizou a pesquisa para este ticket"</summary>
+        <div class="answer">Esse ticket está num canal ou departamento (do lado do Octadesk) que não tem a pesquisa de satisfação habilitada. Não é um problema da extensão — é uma configuração do próprio Octadesk pra aquele tipo de atendimento.</div>
+      </details>
+    </div>
+
+    <div class="faq-group">
+      <div class="kicker">⚙️ Configuração e conta</div>
+      <details>
+        <summary>Apareceu "🚫 Atualize a extensão para continuar usando"</summary>
+        <div class="answer">O administrador definiu uma versão mínima obrigatória e a sua instalação está desatualizada. Vá em <code>chrome://extensions</code>, clique em atualizar no card do ME Avalia e recarregue.</div>
+      </details>
+      <details>
+        <summary>Como sei qual é a minha empresa/departamento na extensão?</summary>
+        <div class="answer">Aparece automaticamente no card do seu perfil, logo abaixo do seu nome, assim que você faz login — reconhecido pelo seu e-mail. Se aparecer em branco, seu e-mail ainda não está vinculado a nenhuma empresa/departamento cadastrado; fale com o administrador.</div>
+      </details>
+      <details>
+        <summary>Fechei o popup no meio do envio — perdi o progresso?</summary>
+        <div class="answer">Não. O envio continua rodando mesmo com o popup fechado. Abra o popup de novo a qualquer momento pra ver o progresso atual ou o relatório final.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="contato" class="band dark contact-box">
+  <div class="inner" style="text-align:center;">
+    <div class="kicker" style="color:rgba(255,255,255,0.6);">Ainda com dúvida?</div>
+    <h2 style="justify-content:center;">💬 Fale conosco</h2>
+    <p class="intro" style="margin-left:auto; margin-right:auto;">Se sua dúvida não foi respondida aqui, ou se algo parece estar quebrado, é só chamar:</p>
+    <div class="contact-card">
+      <div class="avatar">B</div>
+      <div style="text-align:left;">
+        <div class="name">Bruno Marques Freitas</div>
+        <div class="role">Desenvolvedor do ME Avalia</div>
+      </div>
+    </div>
+    <div>
+      <a class="slack-btn" href="https://lwsa-tech.slack.com/team/U08H5HFEWAU" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 122.8 122.8" xmlns="http://www.w3.org/2000/svg">
+          <path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9z" fill="#e01e5a"/>
+          <path d="M32.3 77.6c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"/>
+          <path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2z" fill="#36c5f0"/>
+          <path d="M45.2 32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"/>
+          <path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2z" fill="#2eb67d"/>
+          <path d="M90.5 45.2c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"/>
+          <path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9z" fill="#ecb22e"/>
+          <path d="M77.6 90.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"/>
+        </svg>
+        Falar no Slack
+      </a>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
