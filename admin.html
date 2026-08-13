@@ -97,7 +97,7 @@
 
   /* ─── Form ─── */
   .form-group label { display: block; font-size: 13px; color: #4A6FA5; font-weight: 500; margin-bottom: 6px; }
-  .form-group input, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #D0DCF0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #1a2f4e; }
+  .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid #D0DCF0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #1a2f4e; background: #fff; }
   .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #00529e; }
   .form-group textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
@@ -310,6 +310,15 @@
         <label class="toggle-switch"><input type="checkbox" id="empresaEdicao" /><span class="toggle-slider"></span></label>
       </div>
       <div class="form-group">
+        <label>O que enviar por padrão</label>
+        <select id="empresaEnvio">
+          <option value="ambos">Pesquisa + Mensagem pública</option>
+          <option value="somente_pesquisa">Somente pesquisa</option>
+          <option value="somente_mensagem">Somente mensagem pública</option>
+        </select>
+        <div style="font-size:12px; color:#7aa0c4; margin-top:4px;">Vale pra departamentos que não tiverem uma configuração própria</div>
+      </div>
+      <div class="form-group">
         <label>Mensagem padrão da empresa</label>
         <div class="rich-editor" id="empresaMensagemEditor">
           <div class="editor-toolbar">
@@ -356,6 +365,15 @@
           <div class="toggle-desc">Agentes deste departamento poderão editar a mensagem</div>
         </div>
         <label class="toggle-switch"><input type="checkbox" id="deptoEdicao" /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="form-group">
+        <label>O que enviar</label>
+        <select id="deptoEnvio">
+          <option value="">Usar padrão da empresa</option>
+          <option value="ambos">Pesquisa + Mensagem pública</option>
+          <option value="somente_pesquisa">Somente pesquisa</option>
+          <option value="somente_mensagem">Somente mensagem pública</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Mensagem pública específica</label>
@@ -739,6 +757,10 @@ function renderDeptos() {
       const visiveis = usuarios.slice(0,3);
       const extras   = usuarios.length - 3;
       const msg      = escapeHtml((d.mensagem||'').replace(/<[^>]+>/g,'').substring(0,80));
+      const envioAtual = d.envio || empresa.envio_padrao || 'ambos';
+      const envioTxt = envioAtual === 'somente_pesquisa' ? '📋 Só pesquisa'
+                      : envioAtual === 'somente_mensagem' ? '💬 Só mensagem'
+                      : null;
       return `
       <div class="item-card" style="cursor:default;">
         <div class="item-card-header">
@@ -746,6 +768,7 @@ function renderDeptos() {
             <div class="item-card-name">${escapeHtml(d.nome || id)}</div>
             <div class="item-card-meta">
               <span class="badge ${d.edicao_habilitada ? 'badge-on':'badge-off'}">${d.edicao_habilitada?'Edição habilitada':'Edição desabilitada'}</span>
+              ${envioTxt ? `<span class="badge badge-off">${envioTxt}</span>` : ''}
               <span style="font-size:12px;color:#7aa0c4;">${usuarios.length} agente${usuarios.length!==1?'s':''}</span>
             </div>
           </div>
@@ -893,6 +916,7 @@ function abrirModalEmpresa(id) {
   document.getElementById('modalEmpresaTitle').textContent = id ? 'Editar empresa' : 'Nova empresa';
   document.getElementById('empresaNome').value       = e.nome || '';
   document.getElementById('empresaEdicao').checked   = !!e.edicao_padrao;
+  document.getElementById('empresaEnvio').value      = e.envio_padrao || 'ambos';
   richEmpresaMensagem.innerHTML = e.mensagem_padrao || '';
   dominiosModal = [...(e.dominios||[])];
   renderDominioTags();
@@ -935,6 +959,7 @@ async function salvarEmpresa() {
       nome,
       dominios: [...dominiosModal],
       edicao_padrao: document.getElementById('empresaEdicao').checked,
+      envio_padrao: document.getElementById('empresaEnvio').value,
       mensagem_padrao: msg,
     });
     fecharModalEmpresa();
@@ -963,6 +988,7 @@ function abrirModalDepto(id) {
   document.getElementById('modalDeptoTitle').textContent = id ? 'Editar departamento' : 'Novo departamento';
   document.getElementById('deptoNome').value         = d.nome || '';
   document.getElementById('deptoEdicao').checked     = !!d.edicao_habilitada;
+  document.getElementById('deptoEnvio').value        = d.envio || '';
   richDeptoMensagem.innerHTML = d.mensagem || '';
   agentesModal = [...(d.usuarios||[])];
   renderAgentsTags();
@@ -1027,6 +1053,7 @@ async function salvarDepto() {
       id: idExistente || undefined,
       nome,
       edicao_habilitada: document.getElementById('deptoEdicao').checked,
+      envio: document.getElementById('deptoEnvio').value,
       mensagem: msg,
       usuarios: [...agentesModal],
     });
